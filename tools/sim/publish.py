@@ -93,7 +93,11 @@ EDITS: dict[str, dict] = {
         poster=8.0, vf=GRADE,
     ),
     "single-pick": dict(
-        source="single-pick", start=0.0, duration=17.0, crf=30, webm_crf=46,
+        # ⚠️ Starts twenty seconds in, which is most of the take. The first
+        # twenty seconds are the arm crossing the aisle, and the clip is called
+        # "it takes the truss, not the tomato" — the shot is the gripper closing
+        # on a cluster, which is what the last fifteen seconds are.
+        source="single-pick", start=20.0, duration=15.0, crf=30, webm_crf=46,
         poster=7.0, vf=GRADE,
     ),
     "row-load": dict(
@@ -101,8 +105,11 @@ EDITS: dict[str, dict] = {
         poster=8.0, vf=GRADE,
     ),
     "wrist-eye": dict(
-        source="wrist-eye", start=0.0, duration=16.0, crf=30, webm_crf=46,
-        poster=7.0, vf=GRADE,
+        # The window where the classifier has several fruit in frame at once and
+        # is separating them — which is the decision this clip exists to show —
+        # with the close approach on a ripe one at the front of it.
+        source="wrist-eye", start=2.0, duration=13.0, crf=30, webm_crf=46,
+        poster=4.0, vf=GRADE,
     ),
     "replan": dict(
         # ⚠️ Starts twelve seconds in. This is Week 4's bolted-down scene, whose

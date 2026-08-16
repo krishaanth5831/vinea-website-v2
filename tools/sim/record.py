@@ -182,12 +182,20 @@ class Rig:
     """
 
     def __init__(self, target, distance, azimuth, elevation, lookat_offset=(0, 0, 0),
-                 tau_pos=0.45, tau_orbit=0.9, drift=(0.0, 0.0, 0.0)):
+                 tau_pos=0.45, tau_orbit=0.9, drift=(0.0, 0.0, 0.0),
+                 drift_span=16.0):
         self.target = target                  # callable -> world xyz
         self.offset = np.array(lookat_offset, dtype=float)
         self.d0, self.az0, self.el0 = distance, azimuth, elevation
         self.tau_pos, self.tau_orbit = tau_pos, tau_orbit
         self.d_rate, self.az_rate, self.el_rate = drift
+        # ⚠️ Drift is per-second but it stops after `drift_span`. Unclamped, a
+        # rate tuned for a fifteen-second shot keeps going for the whole take:
+        # a -0.06 m/s push-in ran a 42-second recording of a pick down to a
+        # negative camera distance, which flips the view inside out, and 3 deg/s
+        # of orbit swung it 126 degrees off the subject. The clip is framed for
+        # its first twenty seconds; after that the camera holds what it has.
+        self.drift_span = drift_span
         self.cam = mujoco.MjvCamera()
         self.cam.type = mujoco.mjtCamera.mjCAMERA_FREE
         self.t = 0.0
@@ -209,15 +217,16 @@ class Rig:
         for i in range(3):
             self._lookat[i] = smooth(self._lookat[i], p[i], self.tau_pos, dt)
         self.t += dt
+        d = min(self.t, self.drift_span)
         self.cam.lookat[:] = self._lookat
-        self.cam.distance = smooth(self.cam.distance,
-                                   self.d0 + self.d_rate * self.t,
-                                   self.tau_orbit, dt)
+        self.cam.distance = max(0.25, smooth(self.cam.distance,
+                                             self.d0 + self.d_rate * d,
+                                             self.tau_orbit, dt))
         self.cam.azimuth = smooth(self.cam.azimuth,
-                                  self.az0 + self.az_rate * self.t,
+                                  self.az0 + self.az_rate * d,
                                   self.tau_orbit, dt)
         self.cam.elevation = smooth(self.cam.elevation,
-                                    self.el0 + self.el_rate * self.t,
+                                    self.el0 + self.el_rate * d,
                                     self.tau_orbit, dt)
         return self.cam
 
@@ -277,12 +286,135 @@ def midpoint(a, b, w=0.5):
     return f
 
 
+# --- the perception overlay --------------------------------------------------
+
+class Lens:
+    """Draws what the colour classifier decided, on top of the wrist camera.
+
+    The site's other clips are deliberately bare — no captions, no boxes — but
+    this one is *about* the decision, and a clean camera feed cannot show a
+    decision. Without the overlay the clip is a tomato getting closer; with it,
+    you can watch the robot separate ripe from unripe by colour and commit to
+    one.
+
+    ⚠️ It does not use `farm.overlay.draw`. That function is tuned for a panel a
+    sixth of a screen wide — 0.42pt text, 1px boxes, OpenCV's debug palette —
+    and at 1920x1080 it renders as unreadable hairlines. This draws the same
+    calls from `overlay.find` at a size that reads full-frame, in the site's
+    own palette, so the result is an instrument rather than a debug dump.
+
+    The classifier is the shipped one. Nothing here re-decides anything: it
+    reads `find`'s answer and draws it, including when that answer is wrong.
+    """
+
+    # BGR, matched to the site tokens.
+    SIGNAL = (79, 114, 226)      # #E2724F — ripe. The page's reserved colour.
+    CHALK = (221, 232, 237)      # #EDE8DD
+    MUTE = (119, 131, 138)       # #8A8377 — unripe
+    INK = (18, 21, 15)           # #0F1512
+
+    def __init__(self, detector=None, every=2):
+        from farm.scout import StageDetector
+
+        self.detector = detector or StageDetector()
+        # The detector costs more than the render at this resolution. Every
+        # other frame is 10 ms of lag at 100 Hz — a box a fifth of its own width
+        # behind the fruit at the speeds this arm moves, which is not visible.
+        self.every = every
+        self.calls = []
+        self.n = 0
+        self.target = None       # world xyz of the fruit the arm committed to
+
+    def frame(self, rgb, model=None, data=None):
+        import cv2
+        from farm import overlay
+
+        bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+        if self.n % self.every == 0:
+            self.calls = overlay.find(bgr, detector=self.detector, min_side=16)
+        self.n += 1
+
+        ripe = sum(1 for c in self.calls if c[5])
+        # Far ones first, so a near fruit's tag is drawn over a distant one's
+        # rather than under it.
+        for u0, v0, u1, v1, stage, is_ripe, _fused in sorted(
+                self.calls, key=lambda c: (c[2] - c[0]) * (c[3] - c[1])):
+            colour = self.SIGNAL if is_ripe else self.MUTE
+            self._box(bgr, u0, v0, u1, v1, colour, 4 if is_ripe else 2)
+            # ⚠️ Only label what there is room to label. Four fruit at the far
+            # end of a row are twenty pixels apart, and four tags at that
+            # spacing overlap into one unreadable word — the first pass drew
+            # "GREENTURNING". A ripe call always gets its tag because it is the
+            # decision the clip exists to show; an unripe one earns its tag by
+            # being big enough to carry it.
+            if is_ripe or (u1 - u0) >= 34:
+                self._tag(bgr, u0, v0, "RIPE" if is_ripe else stage.upper(),
+                          colour, filled=is_ripe)
+
+        self._legend(bgr, len(self.calls), ripe)
+        return cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+
+    def _box(self, bgr, u0, v0, u1, v1, colour, thick):
+        import cv2
+
+        if thick >= 4:
+            # Corner brackets for the committed call — it reads as a lock
+            # rather than as a rectangle drawn round some pixels.
+            d = max(10, min(u1 - u0, v1 - v0) // 3)
+            for x, sx in ((u0, 1), (u1, -1)):
+                for y, sy in ((v0, 1), (v1, -1)):
+                    cv2.line(bgr, (x, y), (x + sx * d, y), colour, thick,
+                             cv2.LINE_AA)
+                    cv2.line(bgr, (x, y), (x, y + sy * d), colour, thick,
+                             cv2.LINE_AA)
+        else:
+            cv2.rectangle(bgr, (u0, v0), (u1, v1), colour, thick, cv2.LINE_AA)
+
+    def _tag(self, bgr, u0, v0, text, colour, filled):
+        import cv2
+
+        font, scale, thick = cv2.FONT_HERSHEY_DUPLEX, 0.95, 2
+        (tw, th), _ = cv2.getTextSize(text, font, scale, thick)
+        y = max(th + 10, v0 - 10)
+        if filled:
+            cv2.rectangle(bgr, (u0, y - th - 11), (u0 + tw + 18, y + 8),
+                          colour, -1)
+            cv2.putText(bgr, text, (u0 + 9, y), font, scale, self.INK, thick,
+                        cv2.LINE_AA)
+        else:
+            cv2.putText(bgr, text, (u0 + 2, y), font, scale, colour, thick,
+                        cv2.LINE_AA)
+
+    def _legend(self, bgr, found, ripe):
+        """One line, bottom left. What the classifier is and what it just said.
+
+        Named rather than anonymous: a viewer who cannot tell whether this is a
+        neural network or a colour threshold cannot judge the claim, and the
+        honest answer — a colour threshold — is the more impressive one here.
+        """
+        import cv2
+
+        h = bgr.shape[0]
+        font, scale, thick = cv2.FONT_HERSHEY_DUPLEX, 0.85, 2
+        line = f"HSV COLOUR THRESHOLD   {found} FOUND   {ripe} RIPE"
+        (tw, th), _ = cv2.getTextSize(line, font, scale, thick)
+        pad, x, y = 20, 52, h - 52
+        panel = bgr[y - th - pad:y + pad, x - pad:x + tw + pad]
+        if panel.size:
+            # A dark plate rather than a solid fill, so the frame still reads
+            # as a camera feed with something drawn on it.
+            panel[:] = (panel * 0.35).astype(panel.dtype)
+        cv2.putText(bgr, line, (x, y), font, scale, self.CHALK, thick,
+                    cv2.LINE_AA)
+
+
 # --- the recorder ------------------------------------------------------------
 
 class Take:
     """One recording in progress: a renderer, a rig, a gate and an encoder."""
 
-    def __init__(self, name, model, data, rig, budget_s=None, want_picks=1):
+    def __init__(self, name, model, data, rig, budget_s=None, want_picks=1,
+                 lens=None):
         model.vis.global_.offwidth = W
         model.vis.global_.offheight = H
         self.name = name
@@ -297,6 +429,7 @@ class Take:
         self.budget = None if budget_s is None else int(budget_s * FPS)
         self.want_picks = want_picks
         self.picks = 0
+        self.lens = lens
         self.t0 = time.perf_counter()
         self._last_report = 0
 
@@ -315,7 +448,10 @@ class Take:
     def _render(self):
         cam = self.rig.step(self.model, self.data, 1.0 / FPS)
         self.renderer.update_scene(self.data, camera=cam)
-        return self.renderer.render()
+        rgb = self.renderer.render()
+        if self.lens is not None:
+            rgb = self.lens.frame(rgb, self.model, self.data)
+        return rgb
 
     def frame(self):
         """One recorded frame. Safe to call unconditionally from `on_tick`."""
@@ -516,10 +652,15 @@ def single_pick(probe=False):
 
     model, data, trusses = truss_house(seed=7, n=6)
     park_all(model, data)
+    # ⚠️ The subject is the *pick*, which is the tool and the truss together —
+    # so the camera tracks the midpoint of the two, weighted toward the fruit.
+    # Tracking the fruit alone (the first version) pushed in until the tomato
+    # filled the frame and the gripper was a dark shape leaving the edge: you
+    # could see a tomato, and you could not see it being taken.
     follow = Follow(site_pos("tool0"))
-    rig = Rig(follow, distance=1.30, azimuth=248, elevation=-4,
-              lookat_offset=(0, 0, 0.02), tau_pos=0.55, tau_orbit=1.2,
-              drift=(-0.035, 4.0, -0.5))
+    rig = Rig(follow, distance=0.95, azimuth=292, elevation=-6,
+              lookat_offset=(0.0, 0, 0.01), tau_pos=0.5, tau_orbit=1.2,
+              drift=(-0.012, 0.5, -0.12), drift_span=18.0)
     if probe:
         return probe_shot("single-pick", model, data, rig)
 
@@ -528,11 +669,12 @@ def single_pick(probe=False):
 
     def on_event(kind, **info):
         if kind == "fly":
-            # The fruit is the subject until it is off the vine; after that the
-            # tool is, because a carried truss is wherever the tool is.
+            # Both the tool and the fruit, biased to the fruit — the gripper
+            # closing on a truss is the shot, and it needs both in frame.
             name = info.get("fruit")
             if name:
-                follow.override = body_pos(name)
+                follow.override = midpoint(site_pos("tool0"),
+                                           body_pos(name), w=0.62)
             take.roll()
         elif kind == "result":
             follow.override = None
@@ -572,7 +714,7 @@ def row_load(probe=False):
     # and the row it is emptying is the backdrop rather than the obstruction.
     rig = Rig(follow, distance=1.85, azimuth=292, elevation=-6,
               lookat_offset=(0.02, 0, 0.0), tau_pos=0.85, tau_orbit=1.6,
-              drift=(0.0, 2.4, -0.3))
+              drift=(0.0, 0.75, -0.12))
     if probe:
         return probe_shot("row-load", model, data, rig)
 
@@ -582,7 +724,8 @@ def row_load(probe=False):
         if kind == "fly":
             name = info.get("fruit")
             if name:
-                follow.override = body_pos(name)
+                follow.override = midpoint(site_pos("tool0"),
+                                           body_pos(name), w=0.55)
             take.roll()
         elif kind == "result":
             follow.override = None
@@ -600,12 +743,17 @@ def row_load(probe=False):
 
 @clip("wrist-eye", "The wrist camera finding fruit on its own")
 def wrist_eye(probe=False):
-    """The robot's own eye, unannotated, with perception actually in the loop.
+    """The robot's own eye, with the classifier's decision drawn on it.
 
     `use_truth=False`, so nothing in this run was told where a tomato is: the
-    deck camera maps the aisle, the route is planned off that map, and the
-    wrist camera closes the last 280 mm. The HSV boxes the instrument views draw
-    are deliberately absent — this is the sensor, not the readout.
+    deck camera maps the aisle, the route is planned off that map, and the wrist
+    camera closes the last 280 mm.
+
+    ⚠️ This is the one clip that carries an overlay. Every other clip on the
+    site is a bare camera, because their subject is the machine and a caption
+    would only be decoration. Here the subject is a *decision* — this fruit is
+    red enough, that one is not — and a clean feed cannot show a decision. See
+    `Lens` for why it does not reuse `farm.overlay.draw`.
     """
     import farm.run as frun
 
@@ -615,7 +763,8 @@ def wrist_eye(probe=False):
     if probe:
         return probe_shot("wrist-eye", model, data, rig)
 
-    take = Take("wrist-eye", model, data, rig, budget_s=34)
+    # The overlay is the point of this clip — see `Lens`.
+    take = Take("wrist-eye", model, data, rig, budget_s=34, lens=Lens())
 
     def on_event(kind, **info):
         if kind == "fly":
@@ -677,9 +826,14 @@ def replan(probe=False):
             add_layout.append((f"add{len(add_layout)}", y, z))
 
     follow = Follow(site_pos("tool0"))
-    rig = Rig(follow, distance=1.75, azimuth=200, elevation=-8,
-              lookat_offset=(0.10, 0, 0.03), tau_pos=0.7, tau_orbit=1.4,
-              drift=(0.0, 5.0, -0.6))
+    # ⚠️ Azimuth near 270, not 200. Week 4's scene has a flat green panel
+    # behind the crop — a collision backstop, not scenery — and from 200 the
+    # camera looks straight into it, so the whole take is a green wall with an
+    # arm in front of it. Near 270 the camera looks *along* the row instead:
+    # the panel goes edge-on and the fruit string away into depth.
+    rig = Rig(follow, distance=1.45, azimuth=268, elevation=-7,
+              lookat_offset=(0.06, 0, 0.02), tau_pos=0.7, tau_orbit=1.4,
+              drift=(-0.02, 1.1, -0.15))
     if probe:
         return probe_shot("replan", model, data, rig)
 
@@ -693,7 +847,8 @@ def replan(probe=False):
         if kind == "fly":
             name = info.get("fruit")
             if name:
-                follow.override = body_pos(name)
+                follow.override = midpoint(site_pos("tool0"),
+                                           body_pos(name), w=0.55)
             take.roll()
         elif kind == "result":
             follow.override = None
@@ -729,7 +884,7 @@ def whole_house(probe=False):
 
     rig = Rig(body_pos(trolley.TROLLEY), distance=3.4, azimuth=266,
               elevation=-5, lookat_offset=(0.0, 0.15, 1.02),
-              tau_pos=1.6, tau_orbit=2.2, drift=(0.30, 1.1, -0.35))
+              tau_pos=1.6, tau_orbit=2.2, drift=(0.075, 0.75, -0.19))
     if probe:
         return probe_shot("whole-house", model, data, rig)
 
