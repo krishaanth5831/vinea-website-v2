@@ -83,15 +83,11 @@ than a mood board. Credits in [CREDITS.md](CREDITS.md).
 
 All seven clips were rendered from Vinea's own simulation repo,
 [krishaanth5831/vinea](https://github.com/krishaanth5831/vinea) (`dev`). The
-recorder and the publisher live in that repo under `tools/`:
-
-```bash
-# in the simulation repo, with its venv active
-./.venv/bin/python tools/record.py --list          # what each clip is
-./.venv/bin/python tools/record.py --probe         # opening frame of each, to check framing
-./.venv/bin/python tools/record.py --no-encode     # record the masters (~25 min)
-./.venv/bin/python tools/publish.py --dest /path/to/this/repo/public/video
-```
+recorder and the publisher that made them are kept in
+[`tools/sim/`](tools/sim/README.md) — a site whose only product footage is
+generated should carry the thing that generated it, or "rendered from the
+simulation" is a claim nobody can check. They run from the simulation repo, not
+this one; that README has the setup.
 
 `record.py` drives the same public entry points the simulation's own viewers use
 (`farm.run`, `farm.trussrun`, `farm.duo`, `week4_place.harvest_placed`) and
@@ -141,6 +137,7 @@ src/
     useReducedMotion.ts   the preference as a value, not an effect
   fonts/                  General Sans + IBM Plex Mono, self-hosted
 tools/
+  sim/                    the recorder and publisher that made every clip
   images.mjs              grade, optimise, emit the manifest
   shots.mjs               drive the built site in real headless Chrome and photograph it
   verify.mjs              assert the measured/target rule actually holds in a browser
