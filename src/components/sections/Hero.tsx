@@ -1,8 +1,6 @@
+import Arrow from "@/components/Arrow";
 import Clip from "@/components/Clip";
 import Nav from "@/components/Nav";
-import { REEL } from "@/lib/data";
-
-const HOUSE = REEL.find((s) => s.id === "house")!;
 
 /**
  * Section 1 — dark, full-bleed, one sentence, one CTA.
@@ -11,6 +9,14 @@ const HOUSE = REEL.find((s) => s.id === "house")!;
  * and it is said once. The old site hedged about a dozen times and the effect
  * was an apology; stating it plainly in the first screen and then never again
  * is the same information delivered as confidence.
+ *
+ * ⚠️ Nothing in here reveals on scroll, and that is deliberate twice over. The
+ * page's motion vocabulary is for content the reader travels to; the hero is
+ * where they land, so there is nothing to announce. And an entrance that starts
+ * at opacity 0 defers largest-contentful-paint by its own duration — the
+ * headline was painting at 3.0 s on throttled mobile purely because it was
+ * waiting for hydration to fade it in. Above the fold, the content is simply
+ * there, JavaScript or no JavaScript.
  */
 export default function Hero() {
   return (
@@ -21,7 +27,9 @@ export default function Hero() {
       <div className="absolute inset-0 -z-10">
         <Clip
           name="hero"
-          autoPlay
+          eager
+          priority
+          sizes="100vw"
           label="Simulation: a trolley drives along the pipe rail down a greenhouse aisle while two robot arms harvest tomatoes from the rows on either side."
         />
         {/* ⚠️ One gradient, and a light one. The clip is already graded dark at
@@ -43,11 +51,11 @@ export default function Hero() {
       <Nav />
 
       <div className="shell pb-10 pt-32 sm:pb-14">
-        <p className="t-mono mb-7 text-chalk-soft" data-reveal>
+        <p className="t-mono mb-7 text-chalk-soft">
           Vinea · Westland, Netherlands
         </p>
 
-        <h1 className="t-display max-w-[16ch] text-chalk" data-reveal>
+        <h1 className="t-display max-w-[16ch] text-chalk">
           It picks the
           <br />
           truss, in the
@@ -58,11 +66,7 @@ export default function Hero() {
         </h1>
 
         <div className="mt-8 flex flex-col gap-8 border-t border-forest-edge pt-7 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
-          <div
-            className="max-w-[54ch]"
-            data-reveal
-            style={{ "--reveal-delay": "120ms" } as React.CSSProperties}
-          >
+          <div className="max-w-[54ch]">
             <p className="t-lead text-chalk">
               A modular robot that harvests truss tomatoes from the pipe rail
               already running down every aisle of every Dutch high-wire house.
@@ -77,22 +81,13 @@ export default function Hero() {
             </p>
           </div>
 
-          <div
-            className="shrink-0"
-            data-reveal
-            style={{ "--reveal-delay": "240ms" } as React.CSSProperties}
-          >
+          <div className="shrink-0">
             <a
               href="#pilot"
               className="group inline-flex items-center gap-4 border border-chalk-mute px-7 py-5 transition-colors duration-500 hover:border-chalk hover:bg-chalk hover:text-forest"
             >
               <span className="t-mono">Take a free 2027 pilot</span>
-              <span
-                aria-hidden
-                className="transition-transform duration-500 group-hover:translate-x-1"
-              >
-                &#8594;
-              </span>
+              <Arrow className="transition-transform duration-500 group-hover:translate-x-1" />
             </a>
             <p className="t-mono-sm mt-4 text-chalk-mute lg:text-right">
               Recorded in simulation · Aug 2026
@@ -101,7 +96,6 @@ export default function Hero() {
         </div>
       </div>
 
-      <span className="sr-only">{HOUSE.alt}</span>
     </section>
   );
 }

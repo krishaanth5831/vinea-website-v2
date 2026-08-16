@@ -202,6 +202,7 @@ export default function Robot() {
               <Clip
                 name="module-loop"
                 fit="cover"
+                sizes="(max-width: 1024px) 92vw, 62vw"
                 label="Simulation: the Vinea machine seen from all sides — a trolley sitting on the pipe rail, carrying two robot arms and two crates, rotating slowly."
               />
             </div>

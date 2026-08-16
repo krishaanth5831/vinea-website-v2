@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { Figure as FigureData } from "@/lib/data";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /**
  * A number, rendered according to where it came from.
@@ -21,25 +22,21 @@ const TAG: Record<FigureData["provenance"], string> = {
   grower: "From grower interviews",
 };
 
-function useCountUp(to: number, decimals: number, enabled: boolean) {
+/** Ease out quint: fast off the mark, a long settle. A linear count reads like
+ *  a loading spinner; this reads like a value arriving. */
+const ease = (t: number) => 1 - Math.pow(1 - t, 5);
+const DURATION = 1300;
+
+function useCountUp(to: number, decimals: number, animates: boolean) {
   const ref = useRef<HTMLSpanElement>(null);
-  const [shown, setShown] = useState(enabled ? 0 : to);
+  const [counted, setCounted] = useState(0);
 
   useEffect(() => {
     const node = ref.current;
-    if (!node) return;
-    if (!enabled) {
-      setShown(to);
-      return;
-    }
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setShown(to);
-      return;
-    }
+    if (!node || !animates) return;
 
     let frame = 0;
     let start = 0;
-    const DURATION = 1300;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -48,10 +45,7 @@ function useCountUp(to: number, decimals: number, enabled: boolean) {
         const step = (now: number) => {
           if (!start) start = now;
           const t = Math.min(1, (now - start) / DURATION);
-          // Ease out quint: fast off the mark, a long settle. A linear count
-          // reads like a loading spinner; this reads like a value arriving.
-          const eased = 1 - Math.pow(1 - t, 5);
-          setShown(to * eased);
+          setCounted(to * ease(t));
           if (t < 1) frame = requestAnimationFrame(step);
         };
         frame = requestAnimationFrame(step);
@@ -64,9 +58,13 @@ function useCountUp(to: number, decimals: number, enabled: boolean) {
       observer.disconnect();
       cancelAnimationFrame(frame);
     };
-  }, [to, enabled]);
+  }, [to, animates]);
 
-  return { ref, text: shown.toFixed(decimals) };
+  // ⚠️ The displayed value is derived, not stored. A figure that does not
+  // animate — a target, or anything at all under reduced motion — renders its
+  // full value on the very first paint, rather than rendering zero and being
+  // corrected by an effect a frame later.
+  return { ref, text: (animates ? counted : to).toFixed(decimals) };
 }
 
 export default function Figure({
@@ -78,7 +76,10 @@ export default function Figure({
   onDark?: boolean;
   size?: "figure" | "h2";
 }) {
-  const animates = figure.provenance === "measured" && figure.value !== undefined;
+  const reduced = useReducedMotion();
+  const animates =
+    figure.provenance === "measured" && figure.value !== undefined && !reduced;
+
   const { ref, text } = useCountUp(
     figure.value ?? 0,
     figure.decimals ?? 0,
@@ -106,17 +107,24 @@ export default function Figure({
           figure.literal
         ) : (
           <>
-            {figure.prefix}
-            {/* The live value is aria-hidden and a static one sits beside it, so
-                a screen reader is read the final number once instead of a
-                thousand intermediate ones. */}
+            {/* The counting value is aria-hidden and a static one sits beside
+                it, so a screen reader is read the final number once instead of
+                a thousand intermediate ones.
+                ⚠️ Prefix and suffix are inside *both* spans rather than shared
+                between them. Sharing them interleaves the two values in the
+                element's text — "~12 kg/hr" came out as "~1212 kg/hr" — which
+                is invisible on screen and wrong to anything reading the DOM,
+                including the check in tools/verify.mjs. */}
             <span ref={ref} aria-hidden="true">
+              {figure.prefix}
               {text}
+              {figure.suffix}
             </span>
             <span className="sr-only">
+              {figure.prefix}
               {(figure.value ?? 0).toFixed(figure.decimals ?? 0)}
+              {figure.suffix}
             </span>
-            {figure.suffix}
           </>
         )}
       </p>

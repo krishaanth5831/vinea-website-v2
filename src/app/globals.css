@@ -26,10 +26,14 @@
   /* ink */
   --color-ink: #14110e;
   --color-ink-soft: #4a453d;
-  --color-ink-mute: #736c60;
+  /* Muted tones are set against the *darkest* ground they appear on, not the
+     lightest. ink-mute cleared 4.5:1 on the bone base and failed it on the
+     sunken bone that the "who it is for" section uses; chalk-mute cleared it
+     nowhere, landing at 4.47. Both now pass on every ground they are used on. */
+  --color-ink-mute: #6a6356;
   --color-chalk: #ede8dd;
   --color-chalk-soft: #b3ada0;
-  --color-chalk-mute: #837c70;
+  --color-chalk-mute: #8a8377;
 
   /* supporting */
   --color-moss: #5f6b58;

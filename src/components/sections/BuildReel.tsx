@@ -152,7 +152,11 @@ export default function BuildReel() {
                   <div
                     className={pinned ? "h-full" : "aspect-16/9"}
                   >
-                    <Clip name={stage.clip} label={stage.alt} />
+                    <Clip
+                      name={stage.clip}
+                      label={stage.alt}
+                      sizes="(max-width: 1024px) 92vw, 62vw"
+                    />
                   </div>
                 </div>
 

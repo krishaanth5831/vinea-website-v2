@@ -1,3 +1,4 @@
+import Arrow from "@/components/Arrow";
 import { CONTACT } from "@/lib/data";
 
 /**
@@ -120,12 +121,10 @@ export default function Pilot() {
                     Book a call
                   </span>
                 </span>
-                <span
-                  aria-hidden
-                  className="text-chalk transition-transform duration-500 group-hover:translate-x-1"
-                >
-                  &#8599;
-                </span>
+                <Arrow
+                  direction="up-right"
+                  className="shrink-0 text-chalk transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                />
               </a>
 
               <a
@@ -140,12 +139,7 @@ export default function Pilot() {
                     {CONTACT.email}
                   </span>
                 </span>
-                <span
-                  aria-hidden
-                  className="text-chalk transition-transform duration-500 group-hover:translate-x-1"
-                >
-                  &#8594;
-                </span>
+                <Arrow className="shrink-0 text-chalk transition-transform duration-500 group-hover:translate-x-1" />
               </a>
 
               <p className="t-small text-chalk-mute">
