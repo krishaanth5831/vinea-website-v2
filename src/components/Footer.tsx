@@ -12,11 +12,11 @@ export default function Footer() {
           <nav aria-label="Footer" className="flex flex-wrap gap-x-8 gap-y-3">
             <a
               href={`mailto:${CONTACT.email}`}
-              className="t-mono-sm link text-chalk-soft"
+              className="t-mono-sm link press-text text-chalk-soft"
             >
               {CONTACT.email}
             </a>
-            <a href="/credits" className="t-mono-sm link text-chalk-soft">
+            <a href="/credits" className="t-mono-sm link press-text text-chalk-soft">
               Image credits
             </a>
           </nav>

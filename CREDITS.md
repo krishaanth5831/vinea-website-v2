@@ -12,6 +12,7 @@ text, dimensions and credits is generated into `src/lib/images.ts`.
 
 | File | Photographer | Original |
 |---|---|---|
+| `glasshouse-corridor.jpg` | Rajeeb roy | [Modern greenhouse with rows of growing tomatoes](https://www.pexels.com/photo/modern-greenhouse-with-rows-of-growing-tomatoes-38551884/) |
 | `pipe-rail-aisle.jpg` | Lyn Ong | [Fresh cherry tomatoes growing in a greenhouse](https://www.pexels.com/photo/fresh-cherry-tomatoes-growing-on-a-greenhouse-5005518/) |
 | `diffuse-row.jpg` | Anna Tarazevich | [Flower buds on branches](https://www.pexels.com/photo/flower-buds-on-branches-7299952/) |
 | `dutch-glasshouse.jpg` | Igor Passchier | [Modern greenhouse with tomato plants in South Holland](https://www.pexels.com/photo/modern-greenhouse-with-tomato-plants-in-south-holland-36917505/) |
@@ -22,6 +23,10 @@ text, dimensions and credits is generated into `src/lib/images.ts`.
 
 ## Video
 
+**The hero is a photograph, not a render.** Simulation footage is kept to the
+build reel and the module viewer, where it is labelled as simulation and has a
+job to do; the top of the page is a real glasshouse.
+
 **None of the video is stock, and none of it shows hardware.** Every clip in
 `public/video/` was rendered from Vinea's own MuJoCo simulation
 ([krishaanth5831/vinea](https://github.com/krishaanth5831/vinea), `dev` branch)
@@ -30,10 +35,9 @@ physical robot to film.
 
 | Clip | What it is |
 |---|---|
-| `hero.mp4` | The four-row house, trolley driving the pipe rail, both arms working. Graded dark at encode time for the hero. |
 | `single-pick.mp4` | One arm cradling a truss from below and cutting the stem. |
 | `row-load.mp4` | A full row worked pick by pick, each stem detaching under measured load. |
-| `wrist-eye.mp4` | The robot's own wrist camera, unannotated, on a run with perception in the loop. |
+| `wrist-eye.mp4` | The robot's own wrist camera with the colour classifier drawn on it — each fruit boxed and called ripe or unripe. The only clip on the site that carries an overlay. |
 | `replan.mp4` | Fruit placed at arbitrary positions, more added mid-run, the route thrown away and rebuilt. |
 | `whole-house.mp4` | The establishing shot: the trolley on the rail, two arms, four rows. |
 | `module-loop.mp4` | A seamless 360° turntable of the machine, for the module viewer. |

@@ -53,7 +53,15 @@
 
 :root {
   --measure: 65ch;
-  --lenis-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* The built-in CSS easings are too weak to read as deliberate at these
+     durations. These are the standard strong curves — an ease-out that lands
+     hard, an ease-in-out for on-screen movement, and the iOS drawer curve.
+     ⚠️ There is no `ease-in` token, and that is on purpose: ease-in starts slow
+     and delays the exact moment the user is watching. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --lenis-ease: var(--ease-out);
   color-scheme: light;
 }
 
@@ -87,25 +95,24 @@ body {
    weight instead of scaling one weight across the whole range.
    ------------------------------------------------------------------------ */
 
-/* The hero headline.
-   ⚠️ Sized against viewport *height* as well as width. Set purely on vw it
-   overflowed a 1440x840 laptop — a size that looks generous on a designer's
-   monitor and pushes the call to action off the bottom of the screen on the
-   machine a grower actually opens the link on. The `min()` takes whichever
-   dimension is the binding constraint. */
+/* The hero headline — one line, scrubbed horizontally, so it is sized against
+   viewport *height* rather than width. Width is not a constraint on a line that
+   is meant to overflow. */
 .t-display {
-  font-size: clamp(3rem, min(8.6vw, 15.5vh), 9rem);
+  font-size: clamp(2.6rem, 13.5vh, 9.5rem);
   font-weight: 300;
-  line-height: 0.94;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
+  line-height: 1;
+  /* Tracking is size-specific, never one value for all sizes: letters read too
+     far apart as they grow, so the largest step is tightened hardest and body
+     copy sits near zero. */
+  letter-spacing: -0.042em;
 }
 
 .t-h1 {
   font-size: clamp(2.6rem, 6.6vw, 6rem);
   font-weight: 300;
   line-height: 0.98;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.032em;
   text-wrap: balance;
 }
 
@@ -128,7 +135,7 @@ body {
   font-size: clamp(1.125rem, 1.5vw, 1.5rem);
   font-weight: 400;
   line-height: 1.5;
-  letter-spacing: -0.011em;
+  letter-spacing: -0.008em;
   max-width: var(--measure);
 }
 
@@ -141,7 +148,10 @@ body {
 
 .t-small {
   font-size: 0.9375rem;
-  line-height: 1.55;
+  line-height: 1.58;
+  /* Small text takes slightly positive tracking — the inverse of the display
+     steps — because at this size the letters need the air. */
+  letter-spacing: 0.004em;
   max-width: 56ch;
 }
 
@@ -200,12 +210,174 @@ body {
   background-size: 100% 1px;
   background-position: 0 100%;
   background-repeat: no-repeat;
-  transition: background-size 0.4s var(--lenis-ease);
+  transition: background-size 0.4s var(--ease-out);
 }
 
 .link:hover {
   background-size: 0% 1px;
   background-position: 100% 100%;
+}
+
+
+/* --- press feedback -------------------------------------------------------
+   Apple's first rule: respond on pointer-down, not on release. A control that
+   only reacts once the click completes feels dead, and the gap is exactly where
+   "direct" turns into "laggy". 100ms because feedback is the one place where
+   the animation must finish before the user has finished thinking about it.
+
+   Scale, not colour: it reads at any size, on any ground, and it costs nothing
+   but a composited transform.
+   ------------------------------------------------------------------------ */
+
+.press {
+  transition:
+    transform 240ms var(--ease-out),
+    border-color 300ms var(--ease-out),
+    background-color 300ms var(--ease-out),
+    color 300ms var(--ease-out);
+}
+
+.press:active {
+  transform: scale(0.978);
+  transition-duration: 100ms;
+}
+
+/* --- translucent chrome ---------------------------------------------------
+   A floating layer with content running under it, rather than an opaque strip
+   that eats a fixed band of the viewport. `saturate` above 1 is what keeps a
+   blurred backdrop from going grey.
+   ------------------------------------------------------------------------ */
+
+/* ⚠️ 0.78, not the 0.42 a translucent bar normally wants. This page alternates
+   bone and green-black sections, so the same bar passes over both — at 0.42 it
+   composited to a pale grey over the light sections and the chalk text on it
+   fell to about 2:1. Dark enough that the label contrast is fixed by the bar
+   rather than by whatever happens to be scrolling under it. */
+.chrome {
+  background: rgb(15 21 18 / 0.78);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  /* A bright edge is light catching the near face of a real material. */
+  border-bottom: 1px solid rgb(237 232 221 / 0.12);
+}
+
+.chrome-light {
+  background: rgb(247 244 239 / 0.72);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border-bottom: 1px solid rgb(20 17 14 / 0.07);
+}
+
+/* Vibrancy: text over a translucent surface needs more weight and a touch more
+   tracking than the same text over a solid one, because the ground underneath
+   is moving. */
+.on-chrome {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* --- the other two accessibility signals ----------------------------------
+   Reduced motion is not the only preference a fluid interface has to answer.
+   ------------------------------------------------------------------------ */
+
+@media (prefers-reduced-transparency: reduce) {
+  .chrome {
+    background: var(--color-forest);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .chrome-light {
+    background: var(--color-bone);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .chrome {
+    background: var(--color-forest);
+    backdrop-filter: none;
+    border-bottom-color: var(--color-chalk);
+  }
+  .chrome-light {
+    background: var(--color-bone);
+    backdrop-filter: none;
+    border-bottom-color: var(--color-ink);
+  }
+  .rule,
+  .t-mono {
+    color: inherit;
+  }
+}
+
+
+/* --- a rule that draws itself --------------------------------------------
+   Used on the two column heads in "measured against target". The rule is the
+   thing that separates the two claims, so it earns motion that the numbers
+   under it do not: drawing it left-to-right makes the division land as a
+   division rather than arriving as decoration.
+
+   scaleX from a left origin, so it composites — a `width` transition here
+   would lay out the whole column every frame.
+   ------------------------------------------------------------------------ */
+
+[data-rule] {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-rule="in"] {
+  transform: scaleX(1);
+}
+
+/* --- press feedback on text -----------------------------------------------
+   `.press` scales, which is right for a bordered button and wrong for a word
+   in a sentence — scaling inline text reflows its neighbours and reads as a
+   wobble. A link dips instead.
+   ------------------------------------------------------------------------ */
+
+.press-text {
+  transition: opacity 220ms var(--ease-out);
+}
+
+.press-text:active {
+  opacity: 0.55;
+  transition-duration: 90ms;
+}
+
+/* --- the hero's scroll cue ------------------------------------------------
+   A pinned hero can read as a stuck page: the section is two and a half
+   viewports tall and nothing about it says the line moves when you scroll.
+   One slow travel down a hairline, 2.4s — 0.42 Hz, comfortably clear of the
+   ~0.2 Hz band that reads as a distracting oscillation.
+   ------------------------------------------------------------------------ */
+
+@keyframes cue {
+  0% { transform: translateY(-100%); }
+  60%, 100% { transform: translateY(100%); }
+}
+
+.cue::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 40%;
+  background: var(--color-chalk);
+  animation: cue 2.4s var(--ease-in-out) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-rule] {
+    transform: none;
+  }
+  .cue::after {
+    animation: none;
+    height: 100%;
+    opacity: 0.5;
+  }
 }
 
 /* --- focus --------------------------------------------------------------- */
@@ -227,10 +399,10 @@ body {
 
 [data-reveal] {
   opacity: 0;
-  transform: translate3d(0, 1.75rem, 0);
+  transform: translate3d(0, 1.5rem, 0);
   transition:
-    opacity 0.9s var(--lenis-ease),
-    transform 1s var(--lenis-ease);
+    opacity 0.7s var(--ease-out),
+    transform 0.85s var(--ease-out);
   transition-delay: var(--reveal-delay, 0ms);
   will-change: opacity, transform;
 }
@@ -242,7 +414,7 @@ body {
 
 [data-reveal-mask] {
   clip-path: inset(0 0 100% 0);
-  transition: clip-path 1.1s var(--lenis-ease);
+  transition: clip-path 0.95s var(--ease-out);
   transition-delay: var(--reveal-delay, 0ms);
 }
 

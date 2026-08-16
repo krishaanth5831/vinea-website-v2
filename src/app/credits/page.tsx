@@ -17,7 +17,7 @@ export default function Credits() {
   return (
     <main id="main" className="min-h-svh bg-bone py-(--spacing-section)">
       <div className="shell">
-        <Link href="/" className="t-mono link text-ink-mute">
+        <Link href="/" className="t-mono link press-text text-ink-mute">
           &#8592; Vinea
         </Link>
 
@@ -26,7 +26,7 @@ export default function Credits() {
         <p className="t-lead mt-8 text-ink-soft">
           The photographs on this site are free stock from{" "}
           <a
-            className="link"
+            className="link press-text"
             href="https://www.pexels.com"
             target="_blank"
             rel="noreferrer"
@@ -54,7 +54,7 @@ export default function Credits() {
                 {image.alt}
               </span>
               <a
-                className="t-mono link shrink-0 text-ink-mute"
+                className="t-mono link press-text shrink-0 text-ink-mute"
                 href={image.credit.url}
                 target="_blank"
                 rel="noreferrer"
@@ -67,7 +67,7 @@ export default function Credits() {
 
         <p className="t-small mt-16 text-ink-mute">
           Something credited wrongly? Write to{" "}
-          <a className="link" href={`mailto:${CONTACT.email}`}>
+          <a className="link press-text" href={`mailto:${CONTACT.email}`}>
             {CONTACT.email}
           </a>{" "}
           and it will be fixed the same day.

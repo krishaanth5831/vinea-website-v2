@@ -32,9 +32,18 @@ const MANIFEST = path.join(ROOT, "src", "lib", "images.ts");
 
 /** Longest edge of the shipped master. Above this the extra pixels are only
  *  visible on a 5K display showing one photograph full-bleed. */
-const MAX_EDGE = 2400;
+const MAX_EDGE = 2800;
 
 const SOURCES = [
+  {
+    key: "hero",
+    file: "hero_full.jpg",
+    out: "glasshouse-corridor.jpg",
+    alt:
+      "The central corridor of a commercial tomato glasshouse, rows of plants running away on both sides under a diffusing screen, the far door small in the distance.",
+    credit: { author: "Rajeeb roy", url: "https://www.pexels.com/photo/modern-greenhouse-with-rows-of-growing-tomatoes-38551884/" },
+    grade: "hero",
+  },
   {
     key: "pipeRail",
     file: "rail.jpg",
@@ -116,6 +125,12 @@ const GRADES = {
   // Ripe fruit is the one place saturation is allowed to survive, because the
   // red in these frames is doing the same job as the signal colour.
   warm: { sat: 0.78, bright: 1.0, slope: 0.94, offset: 8, warm: 0.04 },
+  // The hero carries the headline at display size across most of its area, so
+  // it is graded further than anything else: saturation well down, contrast
+  // flattened hard, and the whole frame pulled toward the dark green-black the
+  // section sits on. The photograph is the ground the type stands on, not the
+  // subject.
+  hero: { sat: 0.34, bright: 0.86, slope: 0.72, offset: 4, warm: 0.05 },
 };
 
 /**

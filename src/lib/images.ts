@@ -15,6 +15,15 @@ export type SiteImage = {
 };
 
 export const IMAGES = {
+  hero: {
+    src: "/images/glasshouse-corridor.jpg",
+    width: 2800,
+    height: 1866,
+    alt: "The central corridor of a commercial tomato glasshouse, rows of plants running away on both sides under a diffusing screen, the far door small in the distance.",
+    credit: { author: "Rajeeb roy", url: "https://www.pexels.com/photo/modern-greenhouse-with-rows-of-growing-tomatoes-38551884/" },
+    blurDataURL:
+      "data:image/jpeg;base64,/9j/2wBDABIMDRANCxIQDhAUExIVGywdGxgYGzYnKSAsQDlEQz85Pj1HUGZXR0thTT0+WXlaYWltcnNyRVV9hnxvhWZwcm7/2wBDARMUFBsXGzQdHTRuST5Jbm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm7/wAARCAANABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAABAADBf/EABsQAAICAwEAAAAAAAAAAAAAAAECAAMEESEF/8QAFQEBAQAAAAAAAAAAAAAAAAAAAQD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwDm1ekjsOTa7MWsd3B4+OiHgimqWwaYQI7emu+Shr8ZFsIEpB//2Q==",
+  },
   pipeRail: {
     src: "/images/pipe-rail-aisle.jpg",
     width: 2400,
@@ -53,12 +62,12 @@ export const IMAGES = {
   },
   row: {
     src: "/images/high-wire-row.jpg",
-    width: 1600,
-    height: 2400,
+    width: 1867,
+    height: 2800,
     alt: "A high-wire tomato row from close up, fruit set along the stems at picking height, the aisle running away behind it.",
     credit: { author: "Fer Martinez Gonzalez", url: "https://www.pexels.com/photo/plantation-of-tomatoes-8180574/" },
     blurDataURL:
-      "data:image/jpeg;base64,/9j/2wBDABIMDRANCxIQDhAUExIVGywdGxgYGzYnKSAsQDlEQz85Pj1HUGZXR0thTT0+WXlaYWltcnNyRVV9hnxvhWZwcm7/2wBDARMUFBsXGzQdHTRuST5Jbm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm7/wAARCAAeABQDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAEFBAMG/8QAIhAAAgIBAwQDAAAAAAAAAAAAAQIAAxEEITEFEhNRIzJB/8QAFwEAAwEAAAAAAAAAAAAAAAAAAQIDAP/EABgRAQEBAQEAAAAAAAAAAAAAAAARASEx/9oADAMBAAIRAxEAPwCa7lMlfqY9NYwcP+zsxQIBgE+okpzuDgepGg9Jp+qItCBjviElVaUNWCTCPRmp9VahuczRUo78DiYqC25zNVFh5iTps8V6lHjEIqn+MbQlGf/Z",
+      "data:image/jpeg;base64,/9j/2wBDABIMDRANCxIQDhAUExIVGywdGxgYGzYnKSAsQDlEQz85Pj1HUGZXR0thTT0+WXlaYWltcnNyRVV9hnxvhWZwcm7/2wBDARMUFBsXGzQdHTRuST5Jbm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm7/wAARCAAeABQDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAEFBAMG/8QAIhAAAgICAQMFAAAAAAAAAAAAAQIAAxEhBAUxURITIzJB/8QAFwEAAwEAAAAAAAAAAAAAAAAAAQIDAP/EABcRAQEBAQAAAAAAAAAAAAAAAAARASH/2gAMAwEAAhEDEQA/AJruVyV+pj41jBg/7OzFAgGAT4iSnOwcCRoPScfqiLQgY7xCSqeKGrBJhHozU+qtQ3maKlHrwO0xUFt7mqmw94k6bM4r1KPbEIqrPjGoSjP/2Q==",
   },
   crates: {
     src: "/images/stacked-crates.jpg",
@@ -71,12 +80,12 @@ export const IMAGES = {
   },
   hand: {
     src: "/images/hand-at-the-vine.jpg",
-    width: 1600,
-    height: 2400,
+    width: 1866,
+    height: 2800,
     alt: "A picker's hand under a truss of green tomatoes, taking the weight of the cluster without pulling on it.",
     credit: { author: "Anna Tarazevich", url: "https://www.pexels.com/photo/a-hand-touching-the-fruits-on-a-plant-7299950/" },
     blurDataURL:
-      "data:image/jpeg;base64,/9j/2wBDABIMDRANCxIQDhAUExIVGywdGxgYGzYnKSAsQDlEQz85Pj1HUGZXR0thTT0+WXlaYWltcnNyRVV9hnxvhWZwcm7/2wBDARMUFBsXGzQdHTRuST5Jbm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm7/wAARCAAeABQDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAQFAwEC/8QAHRAAAgIDAQEBAAAAAAAAAAAAAQIAEQMSIQQTBf/EABcBAAMBAAAAAAAAAAAAAAAAAAABAgP/xAAXEQEBAQEAAAAAAAAAAAAAAAAAAREC/9oADAMBAAIRAxEAPwD0MuZx1TOfRzwCpXcY8anZQDE1AYklaFzI7zYSZMrGwYSqowBRyENLG74foST0xP0OvnGgNtKSEa1UlfohUyXXYYq1lu79FCEW2Zug0ISsS//Z",
+      "data:image/jpeg;base64,/9j/2wBDABIMDRANCxIQDhAUExIVGywdGxgYGzYnKSAsQDlEQz85Pj1HUGZXR0thTT0+WXlaYWltcnNyRVV9hnxvhWZwcm7/2wBDARMUFBsXGzQdHTRuST5Jbm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm7/wAARCAAeABQDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAQFAwEC/8QAHRAAAgIDAQEBAAAAAAAAAAAAAQIAEQMSIQQTBf/EABcBAAMBAAAAAAAAAAAAAAAAAAABAgP/xAAWEQEBAQAAAAAAAAAAAAAAAAAAARH/2gAMAwEAAhEDEQA/APQy5nHVM59HPAKldxjxqdlAMTUBiSVoXMTssJMmVjYMJVUYQo5CPSxs+H6Ek9MU9Dr5xoDbSkjDWqkr9EKmS67DFWst3fooQixZm6DQhKxL/9k=",
   },
 } as const satisfies Record<string, SiteImage>;
 

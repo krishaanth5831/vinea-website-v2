@@ -111,7 +111,7 @@ export default function Pilot() {
                 href={CONTACT.calendly}
                 target="_blank"
                 rel="noreferrer"
-                className="group flex items-baseline justify-between gap-6 border-b border-forest-edge pb-6 transition-colors duration-500 hover:border-chalk"
+                className="press group flex items-baseline justify-between gap-6 border-b border-forest-edge pb-6 hover:border-chalk"
               >
                 <span>
                   <span className="t-mono block text-chalk-mute">
@@ -129,7 +129,7 @@ export default function Pilot() {
 
               <a
                 href={`mailto:${CONTACT.email}`}
-                className="group flex items-baseline justify-between gap-6 border-b border-forest-edge pb-6 transition-colors duration-500 hover:border-chalk"
+                className="press group flex items-baseline justify-between gap-6 border-b border-forest-edge pb-6 hover:border-chalk"
               >
                 <span>
                   <span className="t-mono block text-chalk-mute">

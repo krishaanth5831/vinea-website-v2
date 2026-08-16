@@ -2,76 +2,91 @@
 
 import { useEffect } from "react";
 
+import { onTick } from "@/lib/scrub";
+
 /**
- * One IntersectionObserver for every reveal on the page.
+ * Drives every scroll reveal on the page.
  *
- * Elements opt in with `data-reveal` or `data-reveal-mask`; the observer only
- * ever writes the attribute's value, and CSS owns the animation. That keeps the
- * whole effect to opacity, transform and clip-path — no measured reads, no
- * layout, and nothing to recalculate when Lenis moves the page.
+ * Elements opt in with `data-reveal`, `data-reveal-mask` or `data-rule`; this
+ * only ever writes the attribute's value, and CSS owns the animation. That
+ * keeps the whole effect to opacity, transform and clip-path — no layout, and
+ * nothing to recalculate when Lenis moves the page.
  *
- * Each element is unobserved the moment it lands, so a long page costs one
- * callback per element for the whole session rather than one per scroll.
+ * ⚠️ This used to be an IntersectionObserver and is now a per-frame check
+ * against the same ticker the hero and the reel already run on. The observer
+ * was losing elements: on a fast scroll it could sample a frame where a section
+ * was still below the fold and the next where it was already above, and the
+ * five reveals in the section straight after the hero would stay at opacity 0
+ * for the rest of the session. Threshold 0 made it rarer, not impossible. A
+ * position check cannot miss, because it asks the question every frame instead
+ * of waiting to be told.
+ *
+ * The cost is bounded and shrinking: at most `PER_FRAME` rect reads per frame,
+ * only while something is still unresolved, and the ticker is dropped entirely
+ * once the list empties. Elements land in document order, which is the order
+ * they are scrolled past.
  */
+
+/** Rect reads per frame. Enough to clear a screenful of a fast flick. */
+const PER_FRAME = 10;
+
+/** Fires a little before the element is fully on screen, so the motion is
+ *  finishing as the reader arrives rather than starting then. */
+const MARGIN = 0.12;
+
 export default function Reveal() {
   useEffect(() => {
-    const nodes = document.querySelectorAll<HTMLElement>(
-      "[data-reveal], [data-reveal-mask]",
+    const nodes = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        "[data-reveal], [data-reveal-mask], [data-rule]",
+      ),
     );
     if (!nodes.length) return;
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      nodes.forEach((node) => {
-        if (node.hasAttribute("data-reveal")) node.dataset.reveal = "in";
-        if (node.hasAttribute("data-reveal-mask"))
-          node.dataset.revealMask = "in";
-      });
-      return;
-    }
 
     const land = (node: HTMLElement) => {
       if (node.hasAttribute("data-reveal")) node.dataset.reveal = "in";
       if (node.hasAttribute("data-reveal-mask")) node.dataset.revealMask = "in";
+      if (node.hasAttribute("data-rule")) node.dataset.rule = "in";
     };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          land(entry.target as HTMLElement);
-          observer.unobserve(entry.target);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      nodes.forEach(land);
+      return;
+    }
+
+    let pending = nodes;
+    let done = false;
+
+    const sweep = () => {
+      const fold = window.innerHeight * (1 - MARGIN);
+      let checked = 0;
+      const next: HTMLElement[] = [];
+      for (const node of pending) {
+        // Everything past the budget is carried to the next frame untouched —
+        // it is below the fold anyway, because the list is in document order.
+        if (checked >= PER_FRAME) {
+          next.push(node);
+          continue;
         }
-      },
-      // The negative bottom margin delays the trigger so the motion finishes as
-      // the reader arrives rather than starting then.
-      //
-      // ⚠️ Threshold 0, not 0.12. A tall figure needs a lot of itself on screen
-      // to clear 0.12, and a fast flick past it can carry the element from
-      // fully-below to fully-above without the observer ever sampling a frame
-      // where enough of it was visible — which leaves a photograph clipped to
-      // nothing while its caption sits underneath, fully faded in. Any pixel is
-      // enough to count as arrived.
-      { rootMargin: "0px 0px -12% 0px", threshold: 0 },
-    );
+        checked += 1;
+        if (node.getBoundingClientRect().top < fold) land(node);
+        else next.push(node);
+      }
+      pending = next;
+      if (!pending.length) done = true;
+    };
 
-    // ⚠️ Everything already on screen at load is landed outright, before the
-    // observer sees it. The -12% bottom margin that makes scrolling feel right
-    // also shrinks the root at load, and anything sitting in that bottom slice
-    // of the first viewport — which on the hero is the call to action — would
-    // stay at opacity 0 until the visitor scrolled past it. An element the
-    // reader can already see is not something to animate in.
-    const fold = window.innerHeight;
-    const pending: HTMLElement[] = [];
-    nodes.forEach((node) => {
-      if (node.getBoundingClientRect().top < fold) land(node);
-      else pending.push(node);
+    // Anything already on screen at load lands on the first sweep, which still
+    // runs the CSS transition — so the page keeps its staggered entrance and
+    // nothing can be stranded invisible.
+    const stop = onTick(() => {
+      if (done) {
+        stop();
+        return;
+      }
+      sweep();
     });
-
-    // Landing them still runs the CSS transition, so the hero keeps its
-    // staggered entrance — each element carries its own `--reveal-delay`. What
-    // changes is only that none of them can be stranded at opacity 0.
-    pending.forEach((node) => observer.observe(node));
-    return () => observer.disconnect();
+    return stop;
   }, []);
 
   return null;

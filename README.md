@@ -63,15 +63,32 @@ deliberately absent.
 terracotta (`#A83A20`, `#E2724F` on dark) that only ever marks a measured
 number.
 
-**Motion — Lenis plus one IntersectionObserver.** Reveals are a `data-reveal`
-attribute and a CSS transition, so the only properties that ever animate are
-opacity, transform and clip-path. The pinned reel is a tall section with a
-`position: sticky` child, so the browser owns the pin and it cannot desync from
-Lenis; the scrub reads one rect per frame and writes one transform. Lenis itself
-is imported on idle — the page scrolls fine without it, so it has no business in
-the first chunk.
+**Motion — one animation-frame loop for the whole page** (`src/lib/scrub.ts`).
+The hero scrub, the reel scrub and every reveal share it, so there is one place
+that reads layout and one that writes transforms, in that order. Reveals are a
+`data-reveal` attribute plus a CSS transition, so the only properties that ever
+animate are opacity, transform and clip-path.
 
-**Video — recorded, not stock.** See below.
+Both pinned sections are a tall section with a `position: sticky` child — the
+browser owns the pin, so it cannot desync from Lenis and there is no scroll
+handler that can drop a frame and let the page jump. Both scrubs are pure
+functions of scroll offset, which is what makes them interruptible in Apple's
+sense: flick back and they run backwards from exactly where they are, with no
+playing animation to cancel. Lenis itself is imported on idle — the page scrolls
+fine without it, so it has no business in the first chunk.
+
+**The hero is Farmless's mechanic, measured rather than eyeballed.** Their
+display line translates at about 1.2 px per px of scroll while the photograph
+behind it counter-drifts at about 0.088 px per px — a ratio near 14:1, which is
+the whole effect. Vinea's hero uses the same ratio, plus the gentle scale-up
+Farmless applies to their globe section, on a 112% overscanned plate so neither
+the drift nor the scale can expose an edge.
+
+**Video — recorded, not stock, and not in the hero.** Simulation footage lives
+in the build reel and the module viewer, where it is labelled as simulation and
+is doing a job. The top of the page is a photograph of a real glasshouse: a
+render is the wrong thing to lead with when the whole argument is about what is
+and is not real yet. See below.
 
 **Images — graded, not just downloaded.** Seven Pexels photographs, each pulled
 toward the palette by `tools/images.mjs` so the page reads as one system rather
@@ -167,10 +184,13 @@ Built and audited August 2026. Lighthouse, production build, `next start`:
 
 | | performance | accessibility | best practices | SEO |
 |---|---|---|---|---|
-| mobile | 95–98 | 100 | 100 | 100 |
+| mobile | 95–99 | 100 | 100 | 100 |
 | desktop | 100 | 100 | 100 | 100 |
 
-LCP 2.3–3.0 s mobile / 0.6 s desktop, CLS 0, TBT 20–30 ms. Four things got it
+Total page weight on mobile is **319 KiB** — the hero became a photograph
+instead of a 1.3 MB video, which is most of the drop.
+
+LCP 2.3–2.9 s mobile / 0.6 s desktop, CLS 0, TBT 20–30 ms. Five things got it
 there, in the order they mattered:
 
 - **Posters are `next/image`, not the `poster` attribute.** A `poster` is
@@ -186,11 +206,20 @@ there, in the order they mattered:
   perfectly without.
 - **The display face is subset**, 37 KB to 23 KB, keeping the full 200–700
   weight axis. Latin-1 plus the punctuation the site actually sets.
+- **The hero is a photograph.** It was a 1.3 MB clip of the simulation; it is
+  now a 648 KB graded JPEG that `next/image` serves as a ~22 KB AVIF at mobile
+  widths.
 
-The hero clip is 1.3 MB and is not requested until 1.5 s after `load` — it is
-mood behind a headline, the poster carries the meaning, and it is skipped
-entirely under Save-Data or on a 3G-or-worse connection. Every other clip waits
-until it is a viewport away.
+Two accessibility findings worth recording, because both were caused by
+something that looked like an improvement. Dimming the reel's inactive cards to
+pull focus composited their captions down to 2.1:1 — the dim now applies to the
+media only, never the text. And the translucent nav bar at the usual 0.42 opacity
+went pale grey over the site's light sections, taking its labels to about 2:1;
+it sits at 0.78 so the bar fixes the contrast rather than whatever is scrolling
+underneath it.
+
+No video is fetched on load at all. Every clip waits until it is a viewport
+away, and each renders its poster as a `next/image` until it has frames.
 
 ---
 

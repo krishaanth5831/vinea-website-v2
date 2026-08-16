@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 import Clip from "@/components/Clip";
 import { REEL } from "@/lib/data";
+import { useScrub } from "@/lib/scrub";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 /**
  * Section 5 — the build reel. Dark, pinned, scrubbed horizontally.
@@ -18,10 +20,11 @@ import { REEL } from "@/lib/data";
  * Lenis, and there is no scroll handler that can drop a frame and let the
  * section visibly jump.
  *
- * The scrub reads `getBoundingClientRect().top` once per animation frame and
- * writes one transform. No layout is written, nothing is measured that the
- * browser has not already computed for the sticky element, and the only style
- * that changes is a `translate3d`.
+ * The scrub is scroll-linked, which is what makes it interruptible in the sense
+ * Apple means: the transform is a pure function of scroll offset, so flicking
+ * back up runs it backwards from exactly where it is. Nothing is "playing", so
+ * there is nothing to cancel. It shares one animation-frame loop with the hero
+ * — see `lib/scrub.ts` for why that is one loop and not two.
  *
  * Below the `lg` breakpoint the whole mechanism is switched off and the stages
  * stack vertically. A pinned horizontal scroll on a phone fights the browser's
@@ -33,58 +36,27 @@ export default function BuildReel() {
   const track = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const [pinned, setPinned] = useState(false);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     const wide = window.matchMedia("(min-width: 1024px)");
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-    let frame = 0;
-    let running = false;
-
-    const tick = () => {
-      const el = section.current;
-      const rail = track.current;
-      if (el && rail) {
-        const rect = el.getBoundingClientRect();
-        const travel = rect.height - window.innerHeight;
-        // 0 at the moment the section's top reaches the top of the viewport,
-        // 1 at the moment its bottom does.
-        const t = travel > 0 ? clamp(-rect.top / travel, 0, 1) : 0;
-        const distance = rail.scrollWidth - window.innerWidth;
-        rail.style.transform = `translate3d(${-t * distance}px, 0, 0)`;
-        setActive(Math.min(REEL.length - 1, Math.floor(t * REEL.length + 0.15)));
-      }
-      frame = requestAnimationFrame(tick);
-    };
-
-    const start = () => {
-      if (running) return;
-      running = true;
-      frame = requestAnimationFrame(tick);
-    };
-
-    const stop = () => {
-      running = false;
-      cancelAnimationFrame(frame);
-      if (track.current) track.current.style.transform = "";
-    };
-
-    const sync = () => {
-      const on = wide.matches && !reduced.matches;
-      setPinned(on);
-      if (on) start();
-      else stop();
-    };
-
+    const sync = () => setPinned(wide.matches && !reduced);
     sync();
     wide.addEventListener("change", sync);
-    reduced.addEventListener("change", sync);
-    return () => {
-      wide.removeEventListener("change", sync);
-      reduced.removeEventListener("change", sync);
-      stop();
-    };
-  }, []);
+    return () => wide.removeEventListener("change", sync);
+  }, [reduced]);
+
+  useScrub(
+    section,
+    (t) => {
+      const rail = track.current;
+      if (!rail) return;
+      const distance = rail.scrollWidth - window.innerWidth;
+      rail.style.transform = `translate3d(${-t * distance}px, 0, 0)`;
+      setActive(Math.min(REEL.length - 1, Math.floor(t * REEL.length + 0.15)));
+    },
+    pinned,
+  );
 
   return (
     <section
@@ -102,7 +74,7 @@ export default function BuildReel() {
         }
       >
         {/* --- heading, held above the track while it scrubs ------------ */}
-        <div className="shell shrink-0 pt-10 sm:pt-16">
+        <div className="shell shrink-0 pt-20 sm:pt-24">
           <div className="flex flex-wrap items-baseline justify-between gap-6 border-b border-forest-edge pb-8">
             <div>
               <p className="t-mono text-chalk-mute">What is actually built</p>
@@ -112,10 +84,7 @@ export default function BuildReel() {
             </div>
 
             {pinned && (
-              <ol
-                className="flex items-center gap-2"
-                aria-hidden
-              >
+              <ol className="flex items-center gap-2" aria-hidden>
                 {REEL.map((stage, i) => (
                   <li
                     key={stage.id}
@@ -144,14 +113,27 @@ export default function BuildReel() {
                 key={stage.id}
                 className={
                   pinned
-                    ? "flex h-[76%] w-[62vw] shrink-0 flex-col"
+                    ? "flex h-[74%] w-[62vw] shrink-0 flex-col"
                     : "flex w-full flex-col"
                 }
               >
-                <div className="relative min-h-0 flex-1 overflow-hidden bg-forest-lift">
-                  <div
-                    className={pinned ? "h-full" : "aspect-16/9"}
-                  >
+                {/* ⚠️ The dim is on the media only, never on the caption.
+                    Dimming the whole card was the obvious way to pull focus to
+                    the one at centre, and it dragged the caption's effective
+                    contrast down with it — 2.1:1 on the stage number, 2.6:1 on
+                    the line, because compositing an opacity is compositing the
+                    text too. The picture carries the focus; the words stay
+                    readable the whole way across. */}
+                <div
+                  className={`relative min-h-0 flex-1 overflow-hidden bg-forest-lift ${
+                    pinned
+                      ? `transition-opacity duration-500 ${
+                          i === active ? "opacity-100" : "opacity-40"
+                        }`
+                      : ""
+                  }`}
+                >
+                  <div className={pinned ? "h-full" : "aspect-16/9"}>
                     <Clip
                       name={stage.clip}
                       label={stage.alt}
@@ -187,8 +169,4 @@ export default function BuildReel() {
       </div>
     </section>
   );
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
 }

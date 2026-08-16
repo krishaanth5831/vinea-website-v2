@@ -54,8 +54,13 @@ export default function Numbers() {
                 the reader reached a number — which is the hedging tic this site
                 was written to avoid. The tag belongs on the number, because
                 that is the thing that travels when someone screenshots it. */}
-            <div className="border-t-2 border-signal pb-10 pt-5" data-reveal>
-              <h3 className="t-h3 text-signal">Measured</h3>
+            <div className="pb-10" data-reveal>
+              <div
+                className="h-0.5 w-full bg-signal"
+                data-rule
+                aria-hidden
+              />
+              <h3 className="t-h3 mt-5 text-signal">Measured</h3>
             </div>
 
             <div className="flex flex-col gap-14">
@@ -90,8 +95,14 @@ export default function Numbers() {
 
           {/* target */}
           <div>
-            <div className="border-t-2 border-ink pb-10 pt-5" data-reveal>
-              <h3 className="t-h3 text-ink">Target</h3>
+            <div className="pb-10" data-reveal>
+              <div
+                className="h-0.5 w-full bg-ink"
+                data-rule
+                style={{ "--reveal-delay": "120ms" } as React.CSSProperties}
+                aria-hidden
+              />
+              <h3 className="t-h3 mt-5 text-ink">Target</h3>
             </div>
 
             <div className="flex flex-col gap-14">

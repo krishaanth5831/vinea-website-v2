@@ -190,11 +190,11 @@ export const REEL: ReelStage[] = [
     id: "eye",
     clip: "wrist-eye",
     index: "Three",
-    heading: "Its own eyes, no cheating",
+    heading: "It decides which ones are ready",
     line:
-      "The robot's wrist camera, unannotated. Nothing in this run was told where a tomato is — it maps the aisle and finds them.",
+      "The robot's own wrist camera, with the colour classifier drawn on it. Nothing in this run was told where a tomato is — it finds each one, calls it ripe or unripe, and goes after the ripe ones.",
     alt:
-      "Simulation, seen through the robot's wrist-mounted camera: the view closes in on a ripe tomato as the arm approaches it.",
+      "Simulation, seen through the robot's wrist-mounted camera: tomatoes are outlined as the camera passes them and labelled ripe or unripe by colour, and the arm closes on one marked ripe.",
   },
   {
     id: "replan",
