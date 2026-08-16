@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The mark: a truss hanging under a rail. Two things, which is the product. -->
+  <rect width="32" height="32" fill="#0F1512"/>
+  <rect x="3.5" y="7.6" width="25" height="1.7" rx="0.85" fill="#EDE8DD"/>
+  <path d="M16 9.3 V14.6" stroke="#5F6B58" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="16" cy="17.9" r="3.3" fill="#A83A20"/>
+  <circle cx="11.7" cy="22.4" r="2.9" fill="#A83A20"/>
+  <circle cx="20.3" cy="22.4" r="2.9" fill="#A83A20"/>
+</svg>
