@@ -1,26 +1,273 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Vinea design tokens
+
+   Two grounds, not one. The page is a warm bone sheet with two full-bleed
+   passages of deep green-black cut into it (the hero and the build reel), so
+   scrolling has a rhythm rather than a single wash. Every token below exists in
+   an on-light and an on-dark form for that reason.
+
+   The signal colour is reserved. It marks a measured number and nothing else —
+   never a target, never a heading, never a border. That rule is the site's
+   whole credibility device, so it is enforced here by giving the colour a name
+   that says what it is for.
+--------------------------------------------------------------------------- */
+
+@theme {
+  /* grounds */
+  --color-bone: #f7f4ef;
+  --color-bone-sunk: #efeae0;
+  --color-bone-edge: #e2dccf;
+  --color-forest: #0f1512;
+  --color-forest-lift: #18211c;
+  --color-forest-edge: #26312a;
+
+  /* ink */
+  --color-ink: #14110e;
+  --color-ink-soft: #4a453d;
+  --color-ink-mute: #736c60;
+  --color-chalk: #ede8dd;
+  --color-chalk-soft: #b3ada0;
+  --color-chalk-mute: #837c70;
+
+  /* supporting */
+  --color-moss: #5f6b58;
+  --color-moss-soft: #8b9483;
+
+  /* the reserved signal — measured numbers only */
+  --color-signal: #a83a20;
+  --color-signal-dark: #e2724f;
+
+  --font-display: var(--font-general-sans), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
+
+  /* page rhythm */
+  --spacing-gutter: clamp(1.25rem, 4vw, 4.5rem);
+  --spacing-section: clamp(6rem, 13vw, 11rem);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --measure: 65ch;
+  --lenis-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* The site is a designed light page with dark passages, not a themeable
+   surface, so it does not follow the OS. Forcing the scheme keeps form
+   controls and scrollbars from inverting under a dark system setting. */
+html {
+  background: var(--color-bone);
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bone);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--color-signal);
+  color: var(--color-bone);
+}
+
+/* --- type scale -----------------------------------------------------------
+   Display sizes are fluid and set light. General Sans at 300 holds together at
+   140px and turns spindly below about 40px, so the smaller steps step up in
+   weight instead of scaling one weight across the whole range.
+   ------------------------------------------------------------------------ */
+
+/* The hero headline.
+   ⚠️ Sized against viewport *height* as well as width. Set purely on vw it
+   overflowed a 1440x840 laptop — a size that looks generous on a designer's
+   monitor and pushes the call to action off the bottom of the screen on the
+   machine a grower actually opens the link on. The `min()` takes whichever
+   dimension is the binding constraint. */
+.t-display {
+  font-size: clamp(3rem, min(8.6vw, 15.5vh), 9rem);
+  font-weight: 300;
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.t-h1 {
+  font-size: clamp(2.6rem, 6.6vw, 6rem);
+  font-weight: 300;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.t-h2 {
+  font-size: clamp(2rem, 4.2vw, 3.5rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.t-h3 {
+  font-size: clamp(1.375rem, 2.1vw, 1.875rem);
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+}
+
+.t-lead {
+  font-size: clamp(1.125rem, 1.5vw, 1.5rem);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: -0.011em;
+  max-width: var(--measure);
+}
+
+.t-body {
+  font-size: clamp(1rem, 1.05vw, 1.125rem);
+  font-weight: 400;
+  line-height: 1.62;
+  max-width: var(--measure);
+}
+
+.t-small {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  max-width: 56ch;
+}
+
+/* Mono is the truth signal: it appears on data labels, units and measurement
+   tags, and nowhere else. Never on a heading, never on body copy. */
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.t-mono-sm {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+
+.t-figure {
+  font-size: clamp(2.75rem, 6vw, 5rem);
+  font-weight: 300;
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- layout --------------------------------------------------------------- */
+
+.shell {
+  width: 100%;
+  max-width: 96rem;
+  margin-inline: auto;
+  padding-inline: var(--spacing-gutter);
+}
+
+.rule {
+  border: 0;
+  border-top: 1px solid var(--color-bone-edge);
+}
+
+.rule-dark {
+  border: 0;
+  border-top: 1px solid var(--color-forest-edge);
+}
+
+/* --- link underline ------------------------------------------------------ */
+
+.link {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.4s var(--lenis-ease);
+}
+
+.link:hover {
+  background-size: 0% 1px;
+  background-position: 100% 100%;
+}
+
+/* --- focus --------------------------------------------------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.on-dark :focus-visible {
+  outline-color: var(--color-signal-dark);
+}
+
+/* --- scroll reveal --------------------------------------------------------
+   One primitive, driven by a data attribute a small observer flips. Transform
+   and opacity only — nothing here can trigger layout.
+   ------------------------------------------------------------------------ */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 1.75rem, 0);
+  transition:
+    opacity 0.9s var(--lenis-ease),
+    transform 1s var(--lenis-ease);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+[data-reveal="in"] {
+  opacity: 1;
+  transform: none;
+}
+
+[data-reveal-mask] {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 1.1s var(--lenis-ease);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal-mask="in"] {
+  clip-path: inset(0 0 0 0);
+}
+
+/* --- reduced motion -------------------------------------------------------
+   Motion on this page is a claim about truthfulness — measured numbers count
+   up, targets never move — so switching it off has to leave the *content*
+   identical, not just the animation. Every reveal resolves to its end state.
+   ------------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+
+  [data-reveal-mask] {
+    clip-path: none;
+  }
 }
