@@ -1,0 +1,31 @@
+{
+  "eyebrow": "Where we are",
+  "heading": "Early — and here is exactly how early.",
+  "body": "No robot is deployed. There is no field-trial data. Any figure about picking speed or labour saved is not ours to state yet — we'll take those numbers with a grower, in a greenhouse, before we print them.",
+  "columns": [
+    {
+      "k": "Built",
+      "items": [
+        "Base and arm in bring-up on the bench",
+        "Early gripper iterations for the truss",
+        "Nothing greenhouse-hardened yet"
+      ]
+    },
+    {
+      "k": "In simulation",
+      "items": [
+        "Finding a ripe truss and detaching it, before it goes near a real crop",
+        "Driving the row on the pipe rail",
+        "The vision that separates ripe from not-yet"
+      ]
+    },
+    {
+      "k": "Next",
+      "items": [
+        "One reliable, bruise-free pick on a real truss on the bench",
+        "The base and arm in front of a grower's row",
+        "First pilot in 2026"
+      ]
+    }
+  ]
+}

@@ -1,9 +1,11 @@
 import Hero from "@/components/sections/Hero";
+import Ribbon from "@/components/sections/Ribbon";
 import Problem from "@/components/sections/Problem";
 import WhoItsFor from "@/components/sections/WhoItsFor";
 import Robot from "@/components/sections/Robot";
 import BuildReel from "@/components/sections/BuildReel";
 import Numbers from "@/components/sections/Numbers";
+import Status from "@/components/sections/Status";
 import Pilot from "@/components/sections/Pilot";
 import Footer from "@/components/Footer";
 import { CONTACT, GAP, MEASURED } from "@/lib/data";
@@ -43,11 +45,13 @@ export default function Home() {
       />
       <main id="main">
         <Hero />
+        <Ribbon />
         <Problem />
         <WhoItsFor />
         <Robot />
         <BuildReel />
         <Numbers />
+        <Status />
         <Pilot />
       </main>
       <Footer />

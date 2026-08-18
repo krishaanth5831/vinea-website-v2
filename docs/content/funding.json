@@ -1,0 +1,64 @@
+{
+  "lastUpdated": "2026-08-11",
+  "milestones": [
+    {
+      "id": "thesis",
+      "label": "Thesis and ICP locked",
+      "criterion": "Idea Anatomy complete, one written ICP",
+      "weight": 5,
+      "status": "done"
+    },
+    {
+      "id": "growers",
+      "label": "Validating with real growers",
+      "criterion": "8 interviews with owner/decision-makers at Dutch tomato growers, Mom Test, each written up. A WhatsApp reply is not an interview.",
+      "weight": 14,
+      "type": "count",
+      "count": 4,
+      "target": 8
+    },
+    {
+      "id": "sim",
+      "label": "The pick works in simulation",
+      "criterion": "Perception to plan to pick to crate, recorded, with no hardcoded fruit positions",
+      "weight": 18,
+      "status": "partial",
+      "progress": 0.78
+    },
+    {
+      "id": "kghr",
+      "label": "A validated kg/hr",
+      "criterion": "Throughput campaign re-run after the deck camera and the pad-compliance fix, number published with its method",
+      "weight": 14,
+      "status": "todo"
+    },
+    {
+      "id": "economics",
+      "label": "Unit economics on that number",
+      "criterion": "Pricing rebuilt on measured throughput instead of a design target",
+      "weight": 10,
+      "status": "todo"
+    },
+    {
+      "id": "loi",
+      "label": "A grower commits on paper",
+      "criterion": "Signed letter of intent or a paid pilot",
+      "weight": 22,
+      "status": "todo"
+    },
+    {
+      "id": "raise",
+      "label": "Fundraising started",
+      "criterion": "Deck out to 10+ qualified investors and a first meeting taken",
+      "weight": 7,
+      "status": "todo"
+    },
+    {
+      "id": "termsheet",
+      "label": "Term sheet signed",
+      "criterion": "",
+      "weight": 10,
+      "status": "todo"
+    }
+  ]
+}

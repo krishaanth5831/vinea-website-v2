@@ -380,6 +380,37 @@ body {
   }
 }
 
+/* --- ribbon marquee -------------------------------------------------------
+   The capability keyword ticker. The track is duplicated and translated a
+   full -100% so the loop is seamless; the mask fades the edges so it reads as
+   a strip rather than a hard-edged band. Pauses on hover, and is still under
+   prefers-reduced-motion.
+   ------------------------------------------------------------------------ */
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+.marquee {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+.marquee-track {
+  animation: marquee var(--marquee-duration, 45s) linear infinite;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
 /* --- focus --------------------------------------------------------------- */
 
 :focus-visible {
