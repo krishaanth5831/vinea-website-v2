@@ -6,8 +6,7 @@ import { CONTACT } from "@/lib/data";
  *
  * The offer is three lines because it is genuinely three lines: you give rows
  * and honest feedback, we bring the robot and write everything down, you keep
- * the data and owe nothing. Anything longer would be a contract, and there
- * isn't one.
+ * the data. Anything longer would be a contract, and there isn't one.
  */
 
 const TERMS = [
@@ -25,9 +24,9 @@ const TERMS = [
   },
   {
     who: "You keep",
-    what: "The data, and owe nothing",
+    what: "The data, and no commitment",
     note:
-      "The pilot is free. There is no fee, no commitment and no exclusivity attached to it.",
+      "The pilot is paid, and there is no exclusivity attached to it. The rate is set with the first pilot partners once there is measured performance to set it against.",
   },
 ];
 
@@ -45,7 +44,7 @@ export default function Pilot() {
             <br />
             growers. One
             <br />
-            free season.
+            first season.
           </h2>
 
           <div
