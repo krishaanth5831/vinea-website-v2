@@ -30,7 +30,7 @@ const VARIANTS = {
 type VariantKey = keyof typeof VARIANTS;
 
 /** Flip the hero here. */
-const HERO_VARIANT: VariantKey = "B";
+const HERO_VARIANT: VariantKey = "D";
 
 /**
  * The active variant, read as a value rather than set in an effect. The query

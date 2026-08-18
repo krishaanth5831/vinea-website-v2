@@ -1,54 +1,56 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { motion, useScroll, useTransform } from "motion/react";
 
 import Arrow from "@/components/Arrow";
 import Photo from "@/components/Photo";
-import { onTick } from "@/lib/scrub";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { CTA, CTA_HREF, EYEBROW, HEADLINE, HONESTY, LEAD } from "./copy";
+import { EASE, FadeUp, Words } from "./primitives";
 
 /**
- * Hero B — image-led. A full-bleed photograph of the glasshouse with the
- * argument overlaid on a dark veil, and the stage stated in a badge up top so
- * the picture cannot be mistaken for footage of a fielded machine. The
- * photograph counter-drifts a little as the reader scrolls away, so the hero
- * hands off to the ribbon rather than scrolling flat.
+ * Hero B — image-led, and the one that keeps moving. The photograph settles
+ * from a slight overscan while a slow Ken Burns drift keeps the frame alive,
+ * and it parallaxes against the scroll as the reader leaves. The badge up top
+ * states the stage so the moving picture cannot read as footage of a fielded
+ * machine.
  */
 export default function HeroB() {
   const reduced = useReducedMotion();
-  const plate = useRef<HTMLDivElement>(null);
-  const content = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (reduced) return;
-    return onTick(() => {
-      const y = window.scrollY;
-      if (plate.current) {
-        plate.current.style.transform = `translate3d(0, ${(y * 0.08).toFixed(2)}px, 0)`;
-      }
-      if (content.current) {
-        content.current.style.opacity = String(Math.max(0, 1 - y / 520));
-      }
-    });
-  }, [reduced]);
+  const { scrollY } = useScroll();
+  const photoY = useTransform(scrollY, [0, 800], [0, 64]);
+  const contentOpacity = useTransform(scrollY, [0, 520], [1, 0]);
 
   return (
     <section id="top" className="on-dark relative bg-forest">
       <div className="relative flex min-h-svh flex-col overflow-hidden">
         <div className="absolute inset-0">
-          <div
-            ref={plate}
-            className="absolute inset-y-0 will-change-transform"
-            style={{ left: "-4%", width: "108%" }}
+          <motion.div
+            style={reduced ? undefined : { y: photoY }}
+            className="absolute inset-0 will-change-transform"
           >
-            <Photo
-              name="hero"
-              priority
-              sizes="108vw"
-              className="h-full w-full object-cover"
-            />
-          </div>
+            <motion.div
+              initial={reduced ? false : { scale: 1.12 }}
+              animate={reduced ? undefined : { scale: 1 }}
+              transition={{ duration: 1.7, ease: EASE }}
+              className="absolute"
+              style={{ top: "-10%", height: "120%", left: "-4%", width: "108%" }}
+            >
+              <motion.div
+                animate={reduced ? undefined : { scale: [1, 1.06, 1] }}
+                transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
+                className="h-full w-full"
+              >
+                <Photo
+                  name="hero"
+                  priority
+                  sizes="116vw"
+                  className="h-full w-full object-cover"
+                />
+              </motion.div>
+            </motion.div>
+          </motion.div>
+
           <div className="absolute inset-0 bg-forest/55" />
           <div
             className="absolute inset-0"
@@ -59,33 +61,40 @@ export default function HeroB() {
           />
         </div>
 
-        <div
-          ref={content}
+        <motion.div
+          style={reduced ? undefined : { opacity: contentOpacity }}
           className="shell relative flex flex-1 flex-col justify-end pt-28 pb-12 sm:pb-14"
         >
-          <div className="mb-8">
+          <FadeUp className="mb-8" delay={0.15}>
             <p className="t-mono text-chalk-soft">{EYEBROW}</p>
             <p className="t-mono-sm mt-3 inline-flex items-center gap-2 rounded-full border border-forest-edge bg-forest/60 px-3.5 py-1.5 text-chalk-mute">
               <span className="h-1.5 w-1.5 rotate-45 bg-chalk-soft" aria-hidden />
               Pre-prototype · no hardware · simulation only
             </p>
-          </div>
+          </FadeUp>
 
-          <h1 className="t-display max-w-[16ch] text-chalk">{HEADLINE}</h1>
+          <Words
+            text={HEADLINE}
+            className="t-display max-w-[16ch] text-chalk"
+            delay={0.25}
+            stagger={0.09}
+          />
 
-          <div className="mt-8 max-w-[54ch]">
+          <FadeUp className="mt-8 max-w-[54ch]" delay={0.6}>
             <p className="t-lead text-chalk">{LEAD}</p>
             <p className="t-small mt-4 text-chalk-mute">{HONESTY}</p>
-          </div>
+          </FadeUp>
 
-          <a
-            href={CTA_HREF}
-            className="press group mt-10 inline-flex w-fit items-center gap-4 border border-chalk-mute px-7 py-5 text-chalk hover:border-chalk hover:bg-chalk hover:text-forest"
-          >
-            <span className="t-mono">{CTA}</span>
-            <Arrow className="transition-transform duration-500 group-hover:translate-x-1" />
-          </a>
-        </div>
+          <FadeUp className="mt-10" delay={0.75}>
+            <a
+              href={CTA_HREF}
+              className="press group inline-flex w-fit items-center gap-4 border border-chalk-mute px-7 py-5 text-chalk hover:border-chalk hover:bg-chalk hover:text-forest"
+            >
+              <span className="t-mono">{CTA}</span>
+              <Arrow className="transition-transform duration-500 group-hover:translate-x-1" />
+            </a>
+          </FadeUp>
+        </motion.div>
       </div>
     </section>
   );
